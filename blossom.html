@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ACCESS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #00ff88;
+      --green-dim: #00ff8844;
+      --green-glow: #00ff8822;
+      --red: #ff3c5a;
+      --bg: #060a0e;
+      --panel: #0b1117;
+      --border: #1a2a1a;
+      --text: #a0c8a0;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Scanline overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,255,136,0.015) 2px,
+        rgba(0,255,136,0.015) 4px
+      );
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* Grid background */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 480px;
+      padding: 20px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 40px 36px;
+      position: relative;
+      box-shadow:
+        0 0 60px rgba(0,255,136,0.05),
+        inset 0 0 40px rgba(0,0,0,0.4);
+    }
+
+    /* Corner decorations */
+    .panel::before, .panel::after {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-color: var(--green);
+      border-style: solid;
+    }
+    .panel::before {
+      top: -1px; left: -1px;
+      border-width: 2px 0 0 2px;
+    }
+    .panel::after {
+      bottom: -1px; right: -1px;
+      border-width: 0 2px 2px 0;
+    }
+    .corner-tr, .corner-bl {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-color: var(--green);
+      border-style: solid;
+    }
+    .corner-tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; }
+    .corner-bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; }
+
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--green);
+      opacity: 0.6;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--green); }
+      50% { opacity: 0.3; box-shadow: none; }
+    }
+
+    .title {
+      font-family: 'Orbitron', monospace;
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--green);
+      letter-spacing: 8px;
+      text-shadow: 0 0 20px var(--green), 0 0 40px rgba(0,255,136,0.3);
+      animation: flicker 6s infinite;
+    }
+
+    @keyframes flicker {
+      0%, 95%, 100% { opacity: 1; }
+      96% { opacity: 0.7; }
+      97% { opacity: 1; }
+      98% { opacity: 0.5; }
+      99% { opacity: 1; }
+    }
+
+    .subtitle {
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--text);
+      opacity: 0.4;
+      margin-top: 6px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 0 28px 0;
+    }
+
+    .label {
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--green);
+      opacity: 0.5;
+      margin-bottom: 10px;
+    }
+
+    .input-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .input-wrap::before {
+      content: '>';
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--green);
+      font-size: 14px;
+      opacity: 0.7;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: rgba(0,255,136,0.03);
+      border: 1px solid var(--border);
+      color: var(--green);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 16px;
+      letter-spacing: 3px;
+      padding: 14px 14px 14px 32px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      caret-color: var(--green);
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 16px var(--green-dim), inset 0 0 10px rgba(0,255,136,0.04);
+    }
+
+    input[type="text"]::placeholder {
+      color: rgba(160,200,160,0.2);
+      letter-spacing: 2px;
+    }
+
+    button {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--green);
+      color: var(--green);
+      font-family: 'Orbitron', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 5px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--green);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 0;
+    }
+
+    button:hover::before { transform: translateX(0); }
+    button:hover { color: var(--bg); box-shadow: 0 0 20px var(--green-dim); }
+    button span { position: relative; z-index: 1; }
+
+    .message {
+      margin-top: 20px;
+      padding: 14px;
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-align: center;
+      border: 1px solid transparent;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.success {
+      display: block;
+      border-color: var(--green);
+      color: var(--green);
+      background: rgba(0,255,136,0.05);
+    }
+
+    .message.error {
+      display: block;
+      border-color: var(--red);
+      color: var(--red);
+      background: rgba(255,60,90,0.05);
+    }
+
+    .message a {
+      color: var(--green);
+      text-decoration: underline;
+      display: block;
+      margin-top: 10px;
+      font-size: 11px;
+      word-break: break-all;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 28px;
+      font-size: 9px;
+      letter-spacing: 3px;
+      opacity: 0.2;
+    }
+
+    /* Glitch on error shake */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+    .shake { animation: shake 0.4s ease; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="panel">
+    <div class="corner-tr"></div>
+    <div class="corner-bl"></div>
+
+    <div class="header">
+      <div class="status-bar">
+        <div class="status-dot"></div>
+        SYSTEM ONLINE
+        <div class="status-dot"></div>
+      </div>
+      <div class="title">ACCESS</div>
+      <div class="subtitle">RESTRICTED PORTAL — AUTHORIZED USE ONLY</div>
+    </div>
+
+    <hr class="divider"/>
+
+    <div class="label">// ENTER ACCESS CODE</div>
+    <div class="input-wrap">
+      <input type="text" id="codeInput" placeholder="type code here..." autocomplete="off" spellcheck="false" />
+    </div>
+
+    <button onclick="checkCode()"><span>AUTHENTICATE</span></button>
+
+    <div class="message" id="message"></div>
+
+    <div class="footer">[ UNAUTHORIZED ACCESS WILL BE LOGGED ]</div>
+  </div>
+</div>
+
+<script>
+  // Caesar cipher decode with shift 19 (encode shift = 19, decode shift = 26-19 = 7)
+  function caesarDecode(str, shift) {
+    return str.split('').map(c => {
+      if (c >= 'a' && c <= 'z') return String.fromCharCode(((c.charCodeAt(0) - 97 + shift) % 26) + 97);
+      if (c >= 'A' && c <= 'Z') return String.fromCharCode(((c.charCodeAt(0) - 65 + shift) % 26) + 65);
+      return c;
+    }).join('');
+  }
+
+  // The WhatsApp link encoded with Caesar shift 19
+  // Original: https://whatsapp.com/channel/0029Vb7nW6GLo4hp7IDX1q1s
+  // Encoded (shift 19): https://nopbhbll.xvt/xabiift/0029Oh7aP6ZEh4ao7LWG1j1l
+  const encodedLink = "ahhfi://dopnpccl.xvt/xabiift/0029Oh7aP6ZEh4ao7LWG1j1l";
+
+  const CODES = {
+    "blossom": () => caesarDecode(encodedLink, 7)
+  };
+
+  function checkCode() {
+    const input = document.getElementById('codeInput').value.trim().toLowerCase();
+    const msg = document.getElementById('message');
+    const panel = document.querySelector('.panel');
+
+    msg.className = 'message';
+    msg.innerHTML = '';
+
+    if (CODES[input] !== undefined) {
+      const url = CODES[input]();
+      msg.className = 'message success';
+      msg.innerHTML = `ACCESS GRANTED ✓<a href="${url}" target="_blank" rel="noopener">→ OPEN LINK</a>`;
+    } else {
+      msg.className = 'message error';
+      msg.innerHTML = '// ACCESS DENIED — INVALID CODE';
+      panel.classList.remove('shake');
+      void panel.offsetWidth;
+      panel.classList.add('shake');
+    }
+  }
+
+  document.getElementById('codeInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkCode();
+  });
+</script>
+</body>
+</html>
